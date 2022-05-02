@@ -53,7 +53,7 @@ int heuristic_select_split_idx(double** A_train, vector<vector<int>>& B, int N, 
     double max_sse = 0.0;
     int best_j;
     
-    for(int j = base_idx; j < D; j++) {
+    for(int j = base_idx; j < base_idx + D; j++) {
         double accumulate_sse_across_buckets = 0.0;
         
         for(vector<int>& b : B) {
