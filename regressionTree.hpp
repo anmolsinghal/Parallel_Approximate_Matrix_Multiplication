@@ -70,11 +70,11 @@ public:
             cur_level.push_back(root);
             
             for(int i = 0; i < NUM_LEVELS; i++) {
-                printf("At subspace %d, level %d, cur_level size is %lu\n", c, i, cur_level.size());
+                printf("\nAt subspace %d, level %d, cur_level size is %lu\n", c, i, cur_level.size());
                 vector<vector<int>> next_level;
 
                 int j = heuristic_select_split_idx(A_train, cur_level, N, M, c * M);
-                printf("found j %d\n", j);
+                printf("found optimal split %d\n", j);
 
                 indices[c*NUM_LEVELS + i] = j;
 
@@ -103,7 +103,7 @@ public:
                 cur_level = next_level;
 
             } // built all levels for current subspace c
-            printf("built all levels for current subspace\n");
+            printf("built all levels for current subspace, final cur level size is %lu\n", cur_level.size());
 
             // calculate prototypes for c
             // at this stage, cur_level.size() == NUM_LEAVES
@@ -111,14 +111,14 @@ public:
                 for(int idx : cur_level[i]) { // while optimizing, prototypes could be col major ?   
 
                     // each prototype is built from the share of j indices that belong to current subspace c
-                    for(int j = c*M; j < M; j++) {
+                    for(int j = 0; j < M; j++) {
                         // prototypes[c][i][j] +=  A_train[j][idx];
                         prototypes[c*prototype_size + i*NUM_LEAVES + j] += A_train[j][idx];
                     }
                     
                 }
 
-                for(int j = c*M; j < M; j++) {
+                for(int j = 0; j < M; j++) {
                     // prototypes[c][i][j] /=  cur_level[i].size();
                     prototypes[c*prototype_size + i*NUM_LEAVES + j] /= cur_level[i].size();
                 }
