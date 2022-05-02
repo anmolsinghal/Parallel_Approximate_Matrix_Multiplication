@@ -1,3 +1,6 @@
+#ifndef DATAGENERATOR_HPP
+#define DATAGENERATOR_HPP
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -16,16 +19,18 @@ double** generateExamples(int N, int D) {
     return A;
 }
 
-int main() {
-    int N = 10, D = 5;
-    double** A_train = generateExamples(N, D);
+// int main() {
+//     int N = 10, D = 5;
+//     double** A_train = generateExamples(N, D);
     
-    for(int i = 0; i < N; i++) {
-        for(int j = 0; j < D; j++) {
-            printf("%lf ", A_train[j][i]);
-        }
-        printf("\n");
-    }
+//     for(int i = 0; i < N; i++) {
+//         for(int j = 0; j < D; j++) {
+//             printf("%lf ", A_train[j][i]);
+//         }
+//         printf("\n");
+//     }
 
-    return EXIT_SUCCESS;
-}
+//     return EXIT_SUCCESS;
+// }
+
+#endif

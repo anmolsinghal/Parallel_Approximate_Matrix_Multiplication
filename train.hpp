@@ -1,3 +1,6 @@
+#ifndef TRAIN_HPP
+#define TRAIN_HPP
+
 #include <vector>
 #include <limits>
 #include <list>
@@ -5,9 +8,7 @@
 using namespace std;
 
 
-double sse_loss_at_index(double** A_train, vector<int>& B, int N, int D, int j)
-{
-    
+double sse_loss_at_index(double** A_train, vector<int>& B, int N, int D, int j) {  
     double idx_mean = 0.0;
     double idx_sum = 0.0;
     for(int i : B) {
@@ -30,7 +31,7 @@ int sse_loss_per_bucket(double** A_train, vector<int>& B, int N, int D) {
     Returns the best split index j that maximizes sse loss
     as described in the equation (7) in the paper
 */
-    double min_sse = 0.0;
+    double max_sse = 0.0;
     int best_j;
     
     for(int j = 0; j < D; j++) {       
@@ -38,18 +39,18 @@ int sse_loss_per_bucket(double** A_train, vector<int>& B, int N, int D) {
         double accumulate_sse = sse_loss_at_index(A_train, B, N, D, j);
        
 
-        if(accumulate_sse > min_sse) best_j = j;
+        if(accumulate_sse > max_sse) best_j = j;
     }
 
     return best_j;
 }
 
-int sse_loss_across_buckets(double** A_train, vector<vector<int>>& B, int N, int D) {
+int heuristic_select_split_idx(double** A_train, vector<vector<int>>& B, int N, int D) {
 /*
     Given a list of buckets B:
     Returns the best split index j that maximizes sse loss summed across all buckets
 */
-    double min_sse = 0.0;
+    double max_sse = 0.0;
     int best_j;
     
     for(int j = 0; j < D; j++) {
@@ -60,7 +61,7 @@ int sse_loss_across_buckets(double** A_train, vector<vector<int>>& B, int N, int
             accumulate_sse_across_buckets += accumulate_sse;
         }
 
-        if(accumulate_sse_across_buckets > min_sse) best_j = j;
+        if(accumulate_sse_across_buckets > max_sse) best_j = j;
     }
 
     return best_j;
@@ -139,5 +140,4 @@ double optimal_split_unoptimised(double** A_train, vector<int>& B, int N, int D,
     
 }
 
-
-
+#endif
