@@ -98,7 +98,7 @@ double optimal_split_unoptimised(double** A_train, vector<int>& B, int N, int D,
     vector<double> column;
 
     for(int b :B)
-    column.push_back(A_train[b][j]);
+    column.push_back(A_train[j][b]);
 
     sort(column.begin(), column.end());
 
@@ -138,3 +138,6 @@ double optimal_split_unoptimised(double** A_train, vector<int>& B, int N, int D,
 
     
 }
+
+
+
