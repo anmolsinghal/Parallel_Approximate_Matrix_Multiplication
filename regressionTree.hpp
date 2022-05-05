@@ -173,7 +173,7 @@ public:
                 {
                     int leaf = get_leaf_index(input, i, k);
                     double product = products[k*NUM_LEAVES*R + leaf*R + j ];
-                    output[i][j] = product;
+                    output[i][j] += product;
                 }
             }
         }
