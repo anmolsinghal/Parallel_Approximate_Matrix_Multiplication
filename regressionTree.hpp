@@ -173,7 +173,7 @@ public:
         }
     }
     
-    int get_leaf_index(double* in, int row, int c, int N)
+    int get_leaf_idx(double* in, int row, int c, int N)
     {
         int cur_index = 0;
         
@@ -182,6 +182,22 @@ public:
             int b = in[indices[i] * N + row] >= thresholds[c*NUM_NODES + cur_index];
 
             cur_index = 2*cur_index + 1 + b;
+        }
+
+        return cur_index;
+    }
+
+    int* get_leaf_idxs(double input[]) {
+        int* cur_index = new int[C];
+        int temp;
+
+        for(int c = 0; c < C; c++) {
+            temp = 0;
+            for(int i = 0; i < NUM_LEVELS; i++) {
+                int b = (input[indices[c*NUM_LEVELS + i]] < thresholds[c*NUM_NODES + temp]) ? 1 : 0;
+                temp = 2*temp - 1 + b;
+            }
+            cur_index[c] = temp;
         }
 
         return cur_index;
@@ -197,7 +213,7 @@ public:
                 output[j * N + i] = 0.0;
                 for(int k= 0;k<C;k++)
                 {
-                    int leaf = get_leaf_index(input, i, k, N);
+                    int leaf = get_leaf_idx(input, i, k, N);
                     double product = products[k*NUM_LEAVES*R + leaf*R + j];
                     output[j * N + i] += product;
                 }
