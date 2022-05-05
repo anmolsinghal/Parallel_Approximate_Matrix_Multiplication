@@ -8,24 +8,24 @@
 using namespace std;
 
 
-double sse_loss_at_index(double** A_train, vector<int>& B, int j) {  
+double sse_loss_at_index(double* A_train, int N, vector<int>& B, int j) {  
     double idx_mean = 0.0;
     double idx_sum = 0.0;
     for(int i : B) {
-        idx_sum += A_train[j][i];
+        idx_sum += A_train[j*N + i];
     }
     idx_mean = idx_sum / B.size();
 
     double accumulate_sse = 0.0; // holds L(j, B) for current j
     double curr_sse;
     for(int i : B) {
-        curr_sse = A_train[j][i] - idx_mean;
+        curr_sse = A_train[j*N + i] - idx_mean;
         accumulate_sse += curr_sse * curr_sse;
     }
     return accumulate_sse;
 }
 
-int sse_loss_per_bucket(double** A_train, vector<int>& B, int N, int D) {
+int sse_loss_per_bucket(double* A_train, int N, vector<int>& B, int D) {
 /*
     Given a bucket B (a list of indices in A_train that belong to the bucket):
     Returns the best split index j that maximizes sse loss
@@ -36,7 +36,7 @@ int sse_loss_per_bucket(double** A_train, vector<int>& B, int N, int D) {
     
     for(int j = 0; j < D; j++) {       
 
-        double accumulate_sse = sse_loss_at_index(A_train, B, j);
+        double accumulate_sse = sse_loss_at_index(A_train, N, B, j);
        
 
         if(accumulate_sse > max_sse) best_j = j;
@@ -45,7 +45,7 @@ int sse_loss_per_bucket(double** A_train, vector<int>& B, int N, int D) {
     return best_j;
 }
 
-int heuristic_select_split_idx(double** A_train, vector<vector<int>>& B, int N, int D, int base_idx) {
+int heuristic_select_split_idx(double* A_train, vector<vector<int>>& B, int N, int D, int base_idx) {
 /*
     Given a list of buckets B:
     Returns the best split index j that maximizes sse loss summed across all buckets
@@ -57,7 +57,7 @@ int heuristic_select_split_idx(double** A_train, vector<vector<int>>& B, int N, 
         double accumulate_sse_across_buckets = 0.0;
         
         for(vector<int>& b : B) {
-            double accumulate_sse = sse_loss_at_index(A_train, b, j);
+            double accumulate_sse = sse_loss_at_index(A_train, N, b, j);
             accumulate_sse_across_buckets += accumulate_sse;
         }
 
@@ -69,7 +69,7 @@ int heuristic_select_split_idx(double** A_train, vector<vector<int>>& B, int N, 
 
 
 
-double optimal_split_unoptimised(double** A_train, vector<int>& B, int j)
+double optimal_split_unoptimised(double* A_train, int N, vector<int>& B, int j)
 {   
 
     auto get_loss = [](list<double> left, list<double> right)
@@ -99,7 +99,7 @@ double optimal_split_unoptimised(double** A_train, vector<int>& B, int j)
     vector<double> column;
 
     for(int b :B)
-    column.push_back(A_train[j][b]);
+    column.push_back(A_train[j*N + b]);
 
     sort(column.begin(), column.end());
 

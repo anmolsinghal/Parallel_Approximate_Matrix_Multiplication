@@ -5,14 +5,14 @@
 #include <stdlib.h>
 #include <time.h>
 
-double** generateExamples(int N, int D) {
-    double** A = new double*[D];
-    srand(time(NULL));
+double* generateExamples(int N, int D) {
+    double* A = new double[N*D];
+    // srand(time(NULL));
     // stored in column major order
     for(int i = 0; i < D; i++) {
-        A[i] = new double[N];
         for(int j = 0; j < N; j++) {
-            A[i][j] = rand();
+            // A[i*N + j] = (rand() % 20) + 1;
+            A[i*N + j] = drand48();
         }
     }
 
