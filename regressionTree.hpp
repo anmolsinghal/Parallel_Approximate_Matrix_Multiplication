@@ -37,25 +37,8 @@ public:
         M = D/C;
         thresholds = new double[C * NUM_NODES]; // C x NUM_NODES
         indices = new int[C * NUM_LEVELS]; // C x NUM_LEVELS
-         // C x NUM_LEAVES x C
+        prototypes = new double[C * NUM_LEAVES * M]; // C x NUM_LEAVES x C
     }
-
-    int* find_idxs_serial(double input[]) {
-        int* cur_index = new int[C];
-        int temp;
-
-        for(int c = 0; c < C; c++) {
-            temp = 0;
-            for(int i = 0; i < NUM_LEVELS; i++) {
-                int b = (input[indices[c*NUM_LEVELS + i]] < thresholds[c*NUM_NODES + temp]) ? 1 : 0;
-                temp = 2*temp - 1 + b;
-            }
-            cur_index[c] = temp;
-        }
-
-        return cur_index;
-    }
-
 
     void fit(double** A_train, int N) {
 
@@ -147,55 +130,31 @@ public:
     }
     
     //dimension of B is D*R
-    void precompute_products(double** B, int R)
+    void precompute_products(double* B, int R)
     {   
         this->R = R;
-        prototypes = new double[C * NUM_LEAVES * R];
+        products = new double[C * NUM_LEAVES * R];
         for(int i =0;i<C;i++)
         {   
-            
             for(int j =0;j<R;j++)
             {
                 for(int k =0;k<NUM_LEAVES;k++)
                 {
-                    double product = dot_product( prototypes + C*k*M, &(B[R][C*M]), M); //to write this
-
-                    //set value of product at ith subspace, jth row, and kth leaf
-                    products[i*NUM_LEAVES*R + j*R + k ] = product;
+                    double product = dot_product( prototypes + (i*NUM_LEAVES+k)*M, B + j*D + i*M, M); 
+                    //set value of product at ith subspace, kth leaf, and jth col
+                    products[i*NUM_LEAVES*R + k*R + j ] = product;
                 }
             }
         }
     }
     
-    void predict_subspace(double** input, double*& output, int n, int c)
-    {   
-        for(int i =0;i<n;i++)
-        {
-            int cur_index = 0;
-
-            for(int j =0;j<NUM_LEVELS;j++)
-            {
-                int split_index = indices[c*NUM_NODES+j];
-
-                double threshold = thresholds[ c*NUM_NODES + cur_index ];
-
-                int b = input[split_index][i] >= threshold;
-
-                cur_index = 2*cur_index+1+b;
-            }
-
-            //return from hash
-        }
-
-    }
-
     int get_leaf_index(double** in, int row, int c )
     {
         int cur_index = 0;
-        int base_col = c*M;
+        
         for(int i =0;i< NUM_LEVELS;i++)
         {
-            int b = in[row][base_col+indices[i]] >= thresholds[c*NUM_LEAVES + cur_index];
+            int b = in[row][c*NUM_LEVELS + indices[i]] >= thresholds[c*NUM_NODES + cur_index];
 
             cur_index = 2*cur_index + 1 + b;
         }
@@ -213,7 +172,7 @@ public:
                 for(int k= 0;k<C;k++)
                 {
                     int leaf = get_leaf_index(input, i, k);
-                    double product = products[k*NUM_LEAVES*R + i*R + leaf];
+                    double product = products[k*NUM_LEAVES*R + leaf*R + j ];
                     output[i][j] = product;
                 }
             }
