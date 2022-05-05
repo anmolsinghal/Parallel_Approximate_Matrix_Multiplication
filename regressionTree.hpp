@@ -7,9 +7,9 @@
 #include <algorithm>
 #include <vector>
 #include <cmath>
+#include <unordered_map>
 using namespace std;
 
-#define PROTOTYPE_DIM 5
 #define NUM_LEVELS 4
 #define NUM_LEAVES 16
 #define NUM_NODES 15
@@ -27,9 +27,11 @@ private:
     int D; // dimension of each example
     int C; // number of subspaces
     int M; // share of dimension of each subspace
-
+    int R;
+    double* products; 
 public:
-    RegressionTree(int D, int C) {
+    RegressionTree(int D, int C) 
+    {
         this->D = D;
         this->C = C;
         M = D/C;
@@ -38,30 +40,12 @@ public:
         prototypes = new double[C * NUM_LEAVES * M]; // C x NUM_LEAVES x C
     }
 
-    int* find_idxs_serial(double input[]) {
-        int* cur_index = new int[C];
-        int temp;
-
-        for(int c = 0; c < C; c++) {
-            temp = 0;
-            for(int i = 0; i < NUM_LEVELS; i++) {
-                int b = (input[indices[c*NUM_LEVELS + i]] < thresholds[c*NUM_NODES + temp]) ? 1 : 0;
-                temp = 2*temp - 1 + b;
-            }
-            cur_index[c] = temp;
-        }
-
-        return cur_index;
-    }
-
-
     void fit(double** A_train, int N) {
 
         vector<int> root;
         for(int i = 0;i< N;i++)
             root.push_back(i);
 
-        int prototype_size = NUM_LEAVES * M;
         printf("Number of subspaces %d, share of each subspace %d\n", C, M);
 
         for(int c = 0; c < C; c++) {
@@ -113,14 +97,14 @@ public:
                     // each prototype is built from the share of j indices that belong to current subspace c
                     for(int j = 0; j < M; j++) {
                         // prototypes[c][i][j] +=  A_train[j][idx];
-                        prototypes[c*prototype_size + i*NUM_LEAVES + j] += A_train[j][idx];
+                        prototypes[(c*NUM_LEAVES + i)*M + j] += A_train[j][idx];
                     }
                     
                 }
 
                 for(int j = 0; j < M; j++) {
                     // prototypes[c][i][j] /=  cur_level[i].size();
-                    prototypes[c*prototype_size + i*NUM_LEAVES + j] /= cur_level[i].size();
+                    prototypes[(c*NUM_LEAVES + i)*M + j] /= cur_level[i].size();
                 }
             }
 
@@ -135,15 +119,68 @@ public:
             printf("Subspace #%d:\n", c);
             for(int i = 0; i < NUM_LEAVES; i++) {
                 printf("\tPrototpye #%d: ", i);
-                for(int j = 0; j < PROTOTYPE_DIM; j++) {
+                for(int j = 0; j < M; j++) {
                     // printf("%lf ", prototypes[i][j]);
-                    printf("%lf ", prototypes[c*prototype_size + i*NUM_LEAVES + j]);
+                    printf("%lf ", prototypes[(c*NUM_LEAVES + i)*M + j]);
                 }
                 printf("\n");
             }
             printf("\n");
         }
     }
+    
+    //dimension of B is D*R
+    void precompute_products(double* B, int R)
+    {   
+        this->R = R;
+        products = new double[C * NUM_LEAVES * R];
+        for(int i =0;i<C;i++)
+        {   
+            for(int j =0;j<R;j++)
+            {
+                for(int k =0;k<NUM_LEAVES;k++)
+                {
+                    double product = dot_product( prototypes + (i*NUM_LEAVES+k)*M, B + j*D + i*M, M); 
+                    //set value of product at ith subspace, kth leaf, and jth col
+                    products[i*NUM_LEAVES*R + k*R + j ] = product;
+                }
+            }
+        }
+    }
+    
+    int get_leaf_index(double** in, int row, int c )
+    {
+        int cur_index = 0;
+        
+        for(int i =0;i< NUM_LEVELS;i++)
+        {
+            int b = in[row][c*NUM_LEVELS + indices[i]] >= thresholds[c*NUM_NODES + cur_index];
+
+            cur_index = 2*cur_index + 1 + b;
+        }
+
+        return cur_index;
+    }
+
+    //Dimeniosn of input is n*D, output is n*R
+    void predict(double** input, int n, double**& output)
+    {
+        for(int i =0;i<n;i++)
+        {
+            for(int j =0;j<R;j++)
+            {
+                for(int k= 0;k<C;k++)
+                {
+                    int leaf = get_leaf_index(input, i, k);
+                    double product = products[k*NUM_LEAVES*R + leaf*R + j ];
+                    output[i][j] += product;
+                }
+            }
+        }
+    }
+
+
+    
 
 };
 

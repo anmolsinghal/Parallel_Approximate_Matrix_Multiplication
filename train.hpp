@@ -140,4 +140,14 @@ double optimal_split_unoptimised(double** A_train, vector<int>& B, int j)
     
 }
 
+double dot_product(double* A, double* B, int t)
+{   double ans = 0;
+    for(int i =0;i<t;i++)
+    ans += A[i]*B[i];
+
+    return ans;
+}
+
 #endif
+
+
