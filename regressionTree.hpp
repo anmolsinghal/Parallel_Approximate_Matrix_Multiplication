@@ -187,22 +187,6 @@ public:
         return cur_index;
     }
 
-    int* get_leaf_idxs(double input[]) {
-        int* cur_index = new int[C];
-        int temp;
-
-        for(int c = 0; c < C; c++) {
-            temp = 0;
-            for(int i = 0; i < NUM_LEVELS; i++) {
-                int b = (input[indices[c*NUM_LEVELS + i]] < thresholds[c*NUM_NODES + temp]) ? 1 : 0;
-                temp = 2*temp - 1 + b;
-            }
-            cur_index[c] = temp;
-        }
-
-        return cur_index;
-    }
-
     //Dimension of input is N*D, output is N*R
     void predict(double* input, int N, double* output)
     {
@@ -217,6 +201,27 @@ public:
                     double product = products[k*NUM_LEAVES*R + leaf*R + j];
                     output[j * N + i] += product;
                 }
+            }
+        }
+    }
+
+    void predict_cpu(double* input, int N, double* output)
+    {   
+        #pragma omp parallel for collapse(2)
+        for(int i =0;i<N;i++)
+        {
+            for(int j =0;j<R;j++)
+            {
+                double out = 0;
+                #pragma omp for reduction(+:out)
+                for(int k= 0;k<C;k++)
+                {
+                    int leaf = get_leaf_idx(input, i, k, N);
+                    double product = products[k*NUM_LEAVES*R + leaf*R + j];
+                    out += product;
+                }
+
+                output[j * N + i] = out;
             }
         }
     }

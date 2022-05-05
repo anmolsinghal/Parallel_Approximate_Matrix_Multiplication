@@ -42,7 +42,15 @@ int main(int argc, char** argv) {
 
     int N_test = 2*N;
     double* A_test = generateExamples(N_test, D);
+    double* output_cpu = new double[N_test * R];
+    for(int i =0;i<N_test * R;i++)
+    output_cpu[i] = 0;
+    t->predict_cpu(A_test, N_test, output_cpu);
+
+
     double* output = new double[N_test * R];
+    for(int i =0;i<N_test * R;i++)
+    output[i] = 0;
     t->predict(A_test, N_test, output);
 
     // print predicted output
@@ -51,6 +59,8 @@ int main(int argc, char** argv) {
 
     // calculate actual output
     double* output_ref = new double[N_test * R];
+
+
     for(int i = 0; i < R; i++) {
         for(int j = 0; j < N_test; j++) {
             output_ref[i*N_test + j] = 0.0;
@@ -62,6 +72,6 @@ int main(int argc, char** argv) {
 
     // error
     double max_err = 0;
-    for (long i = 0; i < N_test * R; i++) max_err = max(max_err, fabs(output[i] - output_ref[i]));
+    for (long i = 0; i < N_test * R; i++) max_err = max(max_err, fabs(output[i] - output_cpu[i]));
     printf(" %10e\n", max_err);
 }
