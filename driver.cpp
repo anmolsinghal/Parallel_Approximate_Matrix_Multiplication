@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
     int D = 256; // size of each example
     int C = 8; // number of subspaces
     int R = 32; // size of each row in B
-    int NUM_RUNS = 20; // number of inference experiments to run
+    int NUM_RUNS = 5; // number of inference experiments to run
     
     int nthreads = 1;
 
@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
 
     // int N_test = 1000; // number of examples (rows) in test matrix A
     printf("Test matrix size\tOMP Time\tSerial Time\tSpeedup\t\tError\n");
-    for(unsigned long N_test = N; N_test <= 1000000000; N_test += 1000) {
+    for(unsigned long N_test = N; N_test <= 15000; N_test += 1000) {
         printf("\n%lu x %d\t      ", N_test, D);
         double* A_test = generateExamples(N_test, D);
         
