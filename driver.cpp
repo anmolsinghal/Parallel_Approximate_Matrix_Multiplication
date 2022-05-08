@@ -43,6 +43,7 @@ int main(int argc, char** argv) {
     RegressionTree* t = new RegressionTree(D, C);
     
     t->fit(A_train, N);
+    printf("Built regression tree\n");
     // t->print_prototypes();
 
     t->precompute_products(B, R);

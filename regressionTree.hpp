@@ -83,7 +83,7 @@ public:
                 cur_level = next_level;
 
             } // built all levels for current subspace c
-            printf("built all levels for subspace %d, final cur level size is %lu\n", c, cur_level.size());
+            // printf("built all levels for subspace %d, final cur level size is %lu\n", c, cur_level.size());
 
             // calculate prototypes for c
             // at this stage, cur_level.size() == NUM_LEAVES
