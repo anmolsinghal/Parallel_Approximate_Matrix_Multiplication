@@ -26,9 +26,8 @@ int main(int argc, char** argv) {
     int D = 256; // size of each example
     int C = 8; // number of subspaces
     int R = 32; // size of each row in B
-    int NUM_RUNS = 100; // number of inference experiments to run
-    double* A_train = generateExamples(N, D);
-    double* B = generateExamples(D, R);
+    int NUM_RUNS = 20; // number of inference experiments to run
+    
     int nthreads = 1;
 
     // handle arguments with getopt
@@ -85,6 +84,9 @@ int main(int argc, char** argv) {
             }
         }
     }
+
+    double* A_train = generateExamples(N, D);
+    double* B = generateExamples(D, R);
 
     printf("Train set size %d, number of subspaces %d\n", N, C);
     printf("Running %d omp threads\n", nthreads);
