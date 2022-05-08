@@ -2,8 +2,9 @@
 #include "regressionTree.hpp"
 #include "train.hpp"
 #include "utils.hpp"
+#include "predict_gpu.cu"
 
-
+__host__
 void print_matrix(double* mat, int rnum, int cnum) {
     for(int i = 0; i < rnum; i++) {
         printf("{");
@@ -14,7 +15,7 @@ void print_matrix(double* mat, int rnum, int cnum) {
     }
     printf("}\n");
 }
-
+__host__
 void convert_to_row_major(double* input, double* output, int rows, int cols)
 {
     for(int i =0;i<rows;i++)
@@ -25,7 +26,7 @@ void convert_to_row_major(double* input, double* output, int rows, int cols)
         }
     }
 }
-
+__host__
 int main(int argc, char** argv) {
     int N = 1000; // number of examples in A_train
     int D = 128; // size of each example
