@@ -110,6 +110,7 @@ int main(int argc, char** argv) {
         printf("\n%lu x %d\t      ", N_test, D);
         double* A_test = generateExamples(N_test, D);
         
+        omp_time = 0;
         double* output_cpu = new double[N_test * R];
         for(int i =0;i<N_test * R;i++)
         output_cpu[i] = 0;
@@ -121,6 +122,7 @@ int main(int argc, char** argv) {
         printf("%10lf\t", omp_time/NUM_RUNS);
 
 
+        serial_time = 0;
         double* output = new double[N_test * R];
         for(int i =0;i<N_test * R;i++)
         output[i] = 0;
