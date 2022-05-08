@@ -96,38 +96,54 @@ int main(int argc, char** argv) {
     printf(" %10e\n", max_err);
 
 
+    cudaEvent_t start,stop;
+    float elapsedTime;
+
     cudaEventCreate (&start);
     cudaEventCreate (&stop);
-
+    double* device_matrix, *device_products,  *device_thresholds, *device_output;
+    int *device_indices;
 	cudaMalloc( (void**)&device_matrix, N_test*D* sizeof(double));
 	cudaMalloc( (void**)&device_products, C*NUM_LEAVES* sizeof(double));
 	cudaMalloc( (void**)&device_indices, C*NUM_LEVELS* sizeof(int));
     cudaMalloc( (void**)&device_thresholds, C*NUM_NODES* sizeof(double));
-    cudaMalloc( (void**)&device_output, N_test*R);
+    cudaMalloc( (void**)&device_output, N_test*R*sizeof(double));
+    cudaMemset(device_output, 0, N_test*R*sizeof(double));
+
     double* A_test_row_major = new double[ N_test*D];
+    double* A_test_double_transpose = new double[N_test*D];
 
     convert_to_row_major(A_test, A_test_row_major, N_test, D);
+    convert_to_row_major(A_test_row_major, A_test_double_transpose, D, N_test);
+    max_err = 0;
+    for (long i = 0; i < N_test * D; i++) max_err = max(max_err, fabs(A_test[i] - A_test_double_transpose[i]));
+    printf("Error from transpose: %10e\n", max_err);
 
 	cudaMemcpy((void*)device_matrix, (void*)A_test_row_major, N_test*D* sizeof(double) ,cudaMemcpyHostToDevice);
 	cudaMemcpy((void*)device_products, (void*)t->products,C*NUM_LEAVES* sizeof(double),cudaMemcpyHostToDevice);
     cudaMemcpy((void*)device_indices, (void*)t->indices, C*NUM_LEVELS* sizeof(int),cudaMemcpyHostToDevice);
     cudaMemcpy((void*)device_thresholds, (void*)t->thresholds,C*NUM_NODES* sizeof(double),cudaMemcpyHostToDevice);
-
+    
 	cudaEventRecord (start, 0);
 	
-    dim3 dimGrid(N_test, D);
-    dim3 dimBlock(C);
-	predict_gpu<<<dimGrid, dimBlock>>>(device_matrix, N_test, D, R, D/C, device_products, device_indices, device_thresholds, device_output);
+    dim3 dimGrid(N_test);
+    dim3 dimBlock(R);
+    for(int c = 0;c<C;c++)
+    {
+        predict_gpu<<<dimGrid, dimBlock>>>(device_matrix, N_test, D, R, D/C, device_products, device_indices, device_thresholds, device_output, c);
+        cudaDeviceSynchronize();
+    }
+	
 	
 	cudaEventRecord (stop, 0);
 	cudaEventSynchronize (stop);
 	cudaEventElapsedTime ( &elapsedTime, start, stop);
 
     double* host_result = new double[N_test*R];
-    cudaMemcpy((void*)host_result, (void*)device_result,mat_row_size*sizeof(double),cudaMemcpyDeviceToHost);
+    cudaMemcpy((void*)host_result, (void*)device_output,N_test*R*sizeof(double),cudaMemcpyDeviceToHost);
 
-    double max_err = 0;
+    max_err = 0;
     for (long i = 0; i < N_test * R; i++) max_err = max(max_err, fabs(host_result[i] - output_cpu[i]));
-    printf(" %10e\n", max_err);
+    printf("Error from GPU: %10e\n", max_err);
 
 }
