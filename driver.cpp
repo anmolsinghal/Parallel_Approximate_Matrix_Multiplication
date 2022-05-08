@@ -3,6 +3,10 @@
 #include "train.hpp"
 #include "utils.hpp"
 #include <omp.h>
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 // g++ -std=c++11 -fopenmp driver.cpp -o test && ./test
 
@@ -21,11 +25,55 @@ int main(int argc, char** argv) {
     int N = 1000; // number of examples in A_train
     int D = 256; // size of each example
     int C = 8; // number of subspaces
-    int R = 15; // size of each row in B
+    int R = 32; // size of each row in B
     int NUM_RUNS = 100; // number of inference experiments to run
     double* A_train = generateExamples(N, D);
     double* B = generateExamples(D, R);
     int nthreads = 1;
+
+    // handle arguments with getopt
+    char *spec = NULL;
+    int index;
+    int c;
+    char sched_algo;
+
+    opterr = 0;
+
+    while ((c = getopt (argc, argv, "n:d:r:c:")) != -1)
+    switch (c)
+    {
+    case 'n':
+        spec = optarg;
+        sscanf(spec, "%d", &N);
+        break;
+    case 'd':
+        spec = optarg;
+        sscanf(spec, "%d", &D);
+        break;
+    case 'r':
+        spec = optarg;
+        sscanf(spec, "%d", &R);
+        break;
+    case 'c':
+        spec = optarg;
+        sscanf(spec, "%d", &C);
+        break;
+
+    case '?':
+        if (optopt == 's')
+            fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+        else if (isprint (optopt))
+            fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+        else
+            fprintf (stderr,
+                    "Unknown option character `\\x%x'.\n",
+                    optopt);
+        exit(EXIT_FAILURE);
+    
+    default:
+        printf("ERROR opt %c\n", c);
+        exit(EXIT_FAILURE);
+    }
 
     #pragma omp parallel
     {
@@ -38,6 +86,7 @@ int main(int argc, char** argv) {
         }
     }
 
+    printf("Train set size %d, number of subspaces %d\n", N, C);
     printf("Running %d omp threads\n", nthreads);
 
     Timer timer;
