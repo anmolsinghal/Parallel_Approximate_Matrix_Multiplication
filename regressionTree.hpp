@@ -17,7 +17,7 @@ using namespace std;
 
 class RegressionTree
 {
-private:
+public:
     // double thresholds[NUM_NODES];
     // int indices[NUM_LEVELS];
     // double prototypes[NUM_LEAVES][PROTOTYPE_DIM];
@@ -30,7 +30,6 @@ private:
     int M; // share of dimension of each subspace
     int R; // number of columns in B
 
-public:
     RegressionTree(int D, int C) 
     {
         this->D = D;
@@ -179,7 +178,7 @@ public:
         
         for(int i =0;i< NUM_LEVELS-1;i++)
         {
-            int b = in[indices[i] * N + row] >= thresholds[c*NUM_NODES + cur_index];
+            int b = in[indices[c*NUM_LEVELS + i] * N + row] >= thresholds[c*NUM_NODES + cur_index];
 
             cur_index = 2*cur_index + 1 + b;
         }

@@ -3,6 +3,7 @@
 #include "train.hpp"
 #include "utils.hpp"
 
+
 void print_matrix(double* mat, int rnum, int cnum) {
     for(int i = 0; i < rnum; i++) {
         printf("{");
@@ -12,6 +13,17 @@ void print_matrix(double* mat, int rnum, int cnum) {
         printf("},");
     }
     printf("}\n");
+}
+
+void convert_to_row_major(double* input, double* output, int rows, int cols)
+{
+    for(int i =0;i<rows;i++)
+    {
+        for(int j = 0;j<cols;j++)
+        {
+            output[i*cols+j] = input[j*rows+i];
+        }
+    }
 }
 
 int main(int argc, char** argv) {
@@ -81,4 +93,36 @@ int main(int argc, char** argv) {
     double max_err = 0;
     for (long i = 0; i < N_test * R; i++) max_err = max(max_err, fabs(output[i] - output_cpu[i]));
     printf(" %10e\n", max_err);
+
+
+    cudaEventCreate (&start);
+    cudaEventCreate (&stop);
+
+	cudaMalloc( (void**)&device_matrix, N_test*D* sizeof(double));
+	cudaMalloc( (void**)&device_products, C*NUM_LEAVES* sizeof(double));
+	cudaMalloc( (void**)&device_indices, C*NUM_LEVELS* sizeof(int));
+    cudaMalloc( (void**)&device_thresholds, C*NUM_NODES* sizeof(double));
+    cudaMalloc( (void**)&device_output, N_test*R);
+    double* A_test_row_major = new double[ N_test*D];
+
+    convert_to_row_major(A_test, A_test_row_major, N_test, D);
+
+	cudaMemcpy((void*)device_matrix, (void*)A_test_row_major, N_test*D* sizeof(double) ,cudaMemcpyHostToDevice);
+	cudaMemcpy((void*)device_products, (void*)t->products,C*NUM_LEAVES* sizeof(double),cudaMemcpyHostToDevice);
+    cudaMemcpy((void*)device_indices, (void*)t->indices, C*NUM_LEVELS* sizeof(int),cudaMemcpyHostToDevice);
+    cudaMemcpy((void*)device_thresholds, (void*)t->thresholds,C*NUM_NODES* sizeof(double),cudaMemcpyHostToDevice);
+
+	cudaEventRecord (start, 0);
+	
+    dim3 dimGrid(N_test, D);
+    dim3 dimBlock(C);
+	predict_gpu<<<dimGrid, dimBlock>>>(device_matrix, N_test, D, R, D/C, device_products, device_indices, device_thresholds, device_output);
+	
+	cudaEventRecord (stop, 0);
+	cudaEventSynchronize (stop);
+	cudaEventElapsedTime ( &elapsedTime, start, stop);
+
+    double* host_result = new double[N_test*R];
+    cudaMemcpy((void*)host_result, (void*)device_result,mat_row_size*sizeof(double),cudaMemcpyDeviceToHost);
+
 }
