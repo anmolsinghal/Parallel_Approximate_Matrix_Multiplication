@@ -2,6 +2,7 @@
 #include "regressionTree.hpp"
 #include "train.hpp"
 #include "utils.hpp"
+#include <omp.h>
 
 void print_matrix(double* mat, int rnum, int cnum) {
     for(int i = 0; i < rnum; i++) {
@@ -22,6 +23,20 @@ int main(int argc, char** argv) {
     int NUM_RUNS = 100; // number of inference experiments to run
     double* A_train = generateExamples(N, D);
     double* B = generateExamples(D, R);
+    int nthreads = 1;
+
+    #pragma omp parallel
+    {
+        #pragma omp sections nowait
+        {
+            #pragma omp section
+            {
+                nthreads = omp_get_num_threads();
+            }
+        }
+    }
+
+    printf("Running %d omp threads\n", nthreads);
 
     Timer timer;
 
@@ -68,6 +83,9 @@ int main(int argc, char** argv) {
         double max_err = 0;
         for (long i = 0; i < N_test * R; i++) max_err = max(max_err, fabs(output[i] - output_cpu[i]));
         printf("%10e", max_err);
+
+        delete [] output;
+        delete [] output_cpu;
     }
 
     // print predicted output
