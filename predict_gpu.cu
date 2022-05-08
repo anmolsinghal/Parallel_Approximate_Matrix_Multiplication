@@ -10,7 +10,7 @@ __global__ void predict_gpu(double* deviceMatrix,int N_test ,int D, int num_cols
     
     int cur_index = 0;
     
-    double thread_data;
+    double thread_data=0;
 
     for(int i =0;i< NUM_LEVELS-1;i++)
     {

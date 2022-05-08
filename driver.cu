@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
     double* device_matrix, *device_products,  *device_thresholds, *device_output;
     int *device_indices;
 	cudaMalloc( (void**)&device_matrix, N_test*D* sizeof(double));
-	cudaMalloc( (void**)&device_products, C*NUM_LEAVES* sizeof(double));
+	cudaMalloc( (void**)&device_products, C*NUM_LEAVES*R* sizeof(double));
 	cudaMalloc( (void**)&device_indices, C*NUM_LEVELS* sizeof(int));
     cudaMalloc( (void**)&device_thresholds, C*NUM_NODES* sizeof(double));
     cudaMalloc( (void**)&device_output, N_test*R*sizeof(double));
@@ -120,21 +120,25 @@ int main(int argc, char** argv) {
     printf("Error from transpose: %10e\n", max_err);
 
 	cudaMemcpy((void*)device_matrix, (void*)A_test_row_major, N_test*D* sizeof(double) ,cudaMemcpyHostToDevice);
-	cudaMemcpy((void*)device_products, (void*)t->products,C*NUM_LEAVES* sizeof(double),cudaMemcpyHostToDevice);
+	cudaMemcpy((void*)device_products, (void*)t->products,C*NUM_LEAVES*R *sizeof(double),cudaMemcpyHostToDevice);
     cudaMemcpy((void*)device_indices, (void*)t->indices, C*NUM_LEVELS* sizeof(int),cudaMemcpyHostToDevice);
     cudaMemcpy((void*)device_thresholds, (void*)t->thresholds,C*NUM_NODES* sizeof(double),cudaMemcpyHostToDevice);
-    
-	cudaEventRecord (start, 0);
-	
     dim3 dimGrid(N_test);
     dim3 dimBlock(R);
-    for(int c = 0;c<C;c++)
+	cudaEventRecord (start, 0);
+    omp_time =0.0;
+	for(int i =0;i< NUM_RUNS;i++)
     {
-        predict_gpu<<<dimGrid, dimBlock>>>(device_matrix, N_test, D, R, D/C, device_products, device_indices, device_thresholds, device_output, c);
-        cudaDeviceSynchronize();
+        cudaMemset(device_output, 0, N_test*R*sizeof(double));
+        timer.tic();
+        for(int c = 0;c<C;c++)
+        {
+            predict_gpu<<<dimGrid, dimBlock>>>(device_matrix, N_test, D, R, D/C, device_products, device_indices, device_thresholds, device_output, c);
+            cudaDeviceSynchronize();
+        }
+        omp_time += timer.toc();
     }
-	
-	
+
 	cudaEventRecord (stop, 0);
 	cudaEventSynchronize (stop);
 	cudaEventElapsedTime ( &elapsedTime, start, stop);
@@ -145,5 +149,6 @@ int main(int argc, char** argv) {
     max_err = 0;
     for (long i = 0; i < N_test * R; i++) max_err = max(max_err, fabs(host_result[i] - output_cpu[i]));
     printf("Error from GPU: %10e\n", max_err);
+    printf("Time taken for gpu predict %lf\n", omp_time/NUM_RUNS);
 
 }
