@@ -165,7 +165,7 @@ int main(int argc, char** argv) {
         // // double* A_test_double_transpose = new double[N_test*D];
 
         convert_to_row_major(A_test, A_test_row_major, N_test, D);
-        cudaMalloc( (void**)&device_matrix, N_test*D*sizeof(double));
+        cudaMalloc((void**)&device_matrix, N_test*D*sizeof(double));
         cudaMemcpy((void*)device_matrix, (void*)A_test_row_major, N_test*D* sizeof(double) ,cudaMemcpyHostToDevice);
         // // convert_to_row_major(A_test_row_major, A_test_double_transpose, D, N_test);
         // // max_err = 0;
@@ -196,9 +196,7 @@ int main(int argc, char** argv) {
         }
 
         double* host_result = new double[N_test*R];
-        // double* host_result_col_major = new double[N_test*R];
         cudaMemcpy((void*)host_result, (void*)device_output,N_test*R*sizeof(double),cudaMemcpyDeviceToHost);
-        // convert_to_row_major(host_result, host_result_col_major, N_test, R);
 
         cudaEventRecord (stop, 0);
         cudaEventSynchronize (stop);
