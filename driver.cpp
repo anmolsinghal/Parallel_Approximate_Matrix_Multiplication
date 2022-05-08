@@ -125,4 +125,8 @@ int main(int argc, char** argv) {
     double* host_result = new double[N_test*R];
     cudaMemcpy((void*)host_result, (void*)device_result,mat_row_size*sizeof(double),cudaMemcpyDeviceToHost);
 
+    double max_err = 0;
+    for (long i = 0; i < N_test * R; i++) max_err = max(max_err, fabs(host_result[i] - output_cpu[i]));
+    printf(" %10e\n", max_err);
+
 }
