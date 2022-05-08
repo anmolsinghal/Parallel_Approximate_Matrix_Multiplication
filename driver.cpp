@@ -4,6 +4,8 @@
 #include "utils.hpp"
 #include <omp.h>
 
+// g++ -std=c++11 -fopenmp driver.cpp -o test && ./test
+
 void print_matrix(double* mat, int rnum, int cnum) {
     for(int i = 0; i < rnum; i++) {
         printf("{");
