@@ -203,26 +203,26 @@ public:
         }
     }
 
-    void predict_cpu(double* input, int N, double* output)
-    {   
-        #pragma omp parallel for collapse(2)
-        for(int i =0;i<N;i++)
-        {
-            for(int j =0;j<R;j++)
-            {
-                double out = 0;
-                #pragma omp for reduction(+:out)
-                for(int k= 0;k<C;k++)
-                {
-                    int leaf = get_leaf_idx(input, i, k, N);
-                    double product = products[k*NUM_LEAVES*R + leaf*R + j];
-                    out += product;
-                }
+    // void predict_cpu(double* input, int N, double* output)
+    // {   
+    //     #pragma omp parallel for collapse(2)
+    //     for(int i =0;i<N;i++)
+    //     {
+    //         for(int j =0;j<R;j++)
+    //         {
+    //             double out = 0;
+    //             #pragma omp for reduction(+:out)
+    //             for(int k= 0;k<C;k++)
+    //             {
+    //                 int leaf = get_leaf_idx(input, i, k, N);
+    //                 double product = products[k*NUM_LEAVES*R + leaf*R + j];
+    //                 out += product;
+    //             }
 
-                output[j * N + i] = out;
-            }
-        }
-    }
+    //             output[j * N + i] = out;
+    //         }
+    //     }
+    // }
 };
 
 #endif
